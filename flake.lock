@@ -3,7 +3,7 @@
     "emacs-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1662329701,
+        "lastModified": 1662329702,
         "narHash": "sha256-prWe74hKDFufNjCiPVioq8VZVfAGrd8UCRLe/15czEs=",
         "owner": "emacs-mirror",
         "repo": "emacs",
