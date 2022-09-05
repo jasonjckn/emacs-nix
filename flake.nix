@@ -89,7 +89,8 @@
               cp ${final.emacs-vterm}/vterm-module.so $out/share/emacs/site-lisp/vterm-module.so
             '';
 
-            CFLAGS = "-DMAC_OS_X_VERSION_MAX_ALLOWED=110203 -mcpu=apple-m1 -O3 -pipe -ftree-vectorize -fomit-frame-pointer";
+            #-mcpu=apple-m1
+            CFLAGS = "-DMAC_OS_X_VERSION_MAX_ALLOWED=110203 -O3 -pipe -ftree-vectorize -fomit-frame-pointer";
           }
         );
       };
