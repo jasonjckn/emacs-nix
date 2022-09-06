@@ -24,75 +24,80 @@
         overlays = [ self.overlay ];
       });
     in
-    {
-      packages = forAllSystems (system: {
-        emacs = nixpkgsFor.${system}.emacs;
-        emacs-vterm = nixpkgsFor.${system}.emacs-vterm;
-      });
+      {
+        packages = forAllSystems (system: {
+          default = nixpkgsFor.${system}.emacs;
+          emacs = nixpkgsFor.${system}.emacs;
+          emacs-vterm = nixpkgsFor.${system}.emacs-vterm;
+        });
 
-      overlay = final: prev: {
-        emacs-vterm = prev.stdenv.mkDerivation rec {
-          pname = "emacs-vterm";
-          version = "master";
+        overlay = final: prev: {
+          emacs-vterm = prev.stdenv.mkDerivation rec {
+            pname = "emacs-vterm";
+            version = "master";
 
-          src = emacs-vterm-src;
+            src = emacs-vterm-src;
 
-          nativeBuildInputs = [
-            prev.cmake
-            prev.libtool
-            prev.glib.dev
-          ];
+            nativeBuildInputs = [
+              prev.cmake
+              prev.libtool
+              prev.glib.dev
+            ];
 
-          buildInputs = [
-            prev.glib.out
-            prev.libvterm-neovim
-            prev.ncurses
-          ];
+            buildInputs = [
+              prev.glib.out
+              prev.libvterm-neovim
+              prev.ncurses
+            ];
 
-          cmakeFlags = [
-            "-DUSE_SYSTEM_LIBVTERM=yes"
-          ];
+            cmakeFlags = [
+              "-DUSE_SYSTEM_LIBVTERM=yes"
+            ];
 
-          preConfigure = ''
+            preConfigure = ''
             echo "include_directories(\"${prev.glib.out}/lib/glib-2.0/include\")" >> CMakeLists.txt
             echo "include_directories(\"${prev.glib.dev}/include/glib-2.0\")" >> CMakeLists.txt
             echo "include_directories(\"${prev.ncurses.dev}/include\")" >> CMakeLists.txt
             echo "include_directories(\"${prev.libvterm-neovim}/include\")" >> CMakeLists.txt
           '';
 
-          installPhase = ''
+            installPhase = ''
             mkdir -p $out
             cp ../vterm-module.so $out
             cp ../vterm.el $out
           '';
-        };
+          };
 
-        emacs = (prev.emacs.override { srcRepo = true; nativeComp = true; withXwidgets = true; }).overrideAttrs (
-          o: rec {
-            version = "29.0.50";
-            src = emacs-src;
+          emacs = (prev.emacs.override {
+            srcRepo = true;
+            nativeComp = true;
+            withXwidgets = true;
+          }).overrideAttrs (
+            o: rec {
+              version = "29.0.50";
+              src = emacs-src;
 
-            buildInputs = o.buildInputs ++ [ prev.darwin.apple_sdk.frameworks.WebKit ];
+              buildInputs = o.buildInputs ++ [ prev.darwin.apple_sdk.frameworks.WebKit ];
 
-            patches = [
-              ./patches/fix-window-role.patch
-              ./patches/no-frame-refocus-cocoa.patch
-            ];
+              patches = [
+                ./patches/fix-window-role.patch
+                ./patches/no-frame-refocus-cocoa.patch
+              ];
 
-            postPatch = o.postPatch + ''
+              postPatch = o.postPatch + ''
               substituteInPlace lisp/loadup.el \
               --replace '(emacs-repository-get-branch)' '"master"'
             '';
 
-            postInstall = o.postInstall + ''
+              postInstall = o.postInstall + ''
               cp ${final.emacs-vterm}/vterm.el $out/share/emacs/site-lisp/vterm.el
               cp ${final.emacs-vterm}/vterm-module.so $out/share/emacs/site-lisp/vterm-module.so
             '';
 
-            #-mcpu=apple-m1
-            CFLAGS = "-DMAC_OS_X_VERSION_MAX_ALLOWED=110203 -O3 -pipe -ftree-vectorize -fomit-frame-pointer";
-          }
-        );
+              #-mcpu=apple-m1
+              CFLAGS = "-DMAC_OS_X_VERSION_MAX_ALLOWED=110203 -O3 -pipe -ftree-vectorize -fomit-frame-pointer";
+            }
+          );
+        };
       };
-    };
 }
